@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/de.cooperateproject.qvtoutils.blackbox.feature_1.0.0.qualifier.jar" id="de.cooperateproject.qvtoutils.blackbox.feature" version="1.0.0.qualifier">
+      <category name="qvto_utils"/>
+   </feature>
+   <category-def name="qvto_utils" label="QVT-O Utils"/>
+</site>
