@@ -51,30 +51,29 @@ public class CooperateLibrary {
         return result;
     }
     
+    @SuppressWarnings("unchecked")
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Adds the given element to multi-valued feature of the given context element.")
     public static void addToFeature(IContext executionContext, Object context, String featureName, Object element) {
-        addToFeature(executionContext, context, featureName, Arrays.asList(element));
+        Collection<Object> values = getFeatureCollection(context, featureName);
+        if (element instanceof Collection) {
+            values.addAll((Collection<Object>)element);
+        } else {
+            values.add(element);
+        }
     }
     
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
-            description = "Adds the given elements to multi-valued feature of the given context element.")
-    public static void addToFeature(IContext executionContext, Object context, String featureName, Collection<Object> elements) {
-        getFeatureCollection(context, featureName).addAll(elements);
-    }
-    
+    @SuppressWarnings("unchecked")
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Replaces existing elements with the given element in a multi-valued feature of the given context element.")
     public static void setToFeature(IContext executionContext, Object context, String featureName, Object element) {
-        setToFeature(executionContext, context, featureName, Arrays.asList(element));
-    }
-    
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
-            description = "Replaces existing elements with the given elements in a multi-valued feature of the given context element.")
-    public static void setToFeature(IContext executionContext, Object context, String featureName, Collection<Object> elements) {
         Collection<Object> values = getFeatureCollection(context, featureName);
         values.clear();
-        values.addAll(elements);
+        if (element instanceof Collection) {
+            values.addAll((Collection<Object>)element);
+        } else {
+            values.add(element);
+        }
     }
     
     private static Collection<Object> getFeatureCollection(Object context, String featureName) {
