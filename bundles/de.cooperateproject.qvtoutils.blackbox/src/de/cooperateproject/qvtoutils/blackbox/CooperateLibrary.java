@@ -3,6 +3,7 @@ package de.cooperateproject.qvtoutils.blackbox;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collector;
 
 import org.eclipse.emf.ecore.EClass;
@@ -62,6 +63,13 @@ public class CooperateLibrary {
                     Optional.ofNullable(rootObject).map(Object::getClass).orElseGet(null));
         }
         return result != null ? result : CollectionUtil.createNewOrderedSet();
+    }
+    
+    @SuppressWarnings("squid:S1319")
+    @Operation(contextual = false, withExecutionContext = false, kind = Kind.QUERY, description = "Generates a UUID.")
+    public static String generateUUID() {
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString();
     }
     
     @SuppressWarnings("unchecked")
