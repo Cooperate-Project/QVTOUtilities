@@ -5,7 +5,7 @@
       <repositories location="../de.cooperateproject.qvtoutils.updatesite/target/repository"/>
     </contributions>
     <contributions label="externals">
-      <repositories location="http://download.eclipse.org/releases/neon/" mirrorArtifacts="false">
+      <repositories location="http://download.eclipse.org/releases/oxygen/" mirrorArtifacts="false">
         <features name="org.eclipse.emf.ecore.feature.group"/>
         <features name="org.eclipse.m2m.qvt.oml.feature.group"/>
       </repositories>
