@@ -69,7 +69,7 @@ public class CooperateLibrary {
     @Operation(contextual = false, withExecutionContext = false, kind = Kind.QUERY, description = "Generates a UUID.")
     public static String generateUUID() {
         UUID uuid = UUID.randomUUID();
-        return uuid.toString();
+        return "{" + uuid.toString() + "}";
     }
     
     @SuppressWarnings("unchecked")
