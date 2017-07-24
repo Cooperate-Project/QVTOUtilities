@@ -16,7 +16,7 @@ import org.junit.runners.Parameterized.Parameters;
 import de.cooperateproject.qvtoutils.blackbox.CooperateLibrary;
 
 @RunWith(Parameterized.class)
-public class CooperateLibraryFeatureSetterTests {
+public class CooperateLibraryFeatureSetterTest {
 
 	@FunctionalInterface
 	private static interface SetterFunction {
@@ -35,7 +35,7 @@ public class CooperateLibraryFeatureSetterTests {
 	private IContext context;
 	private EPackage rootPackage;
 	
-	public CooperateLibraryFeatureSetterTests(String methodName, SetterFunction setterFunction) {
+	public CooperateLibraryFeatureSetterTest(String methodName, SetterFunction setterFunction) {
 		this.setterFunction = setterFunction;
 	}
 	
