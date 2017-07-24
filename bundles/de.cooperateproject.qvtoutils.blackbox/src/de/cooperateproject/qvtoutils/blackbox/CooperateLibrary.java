@@ -1,6 +1,5 @@
 package de.cooperateproject.qvtoutils.blackbox;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -11,6 +10,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.m2m.qvt.oml.blackbox.java.Operation;
 import org.eclipse.m2m.qvt.oml.blackbox.java.Operation.Kind;
 import org.eclipse.m2m.qvt.oml.util.IContext;
+import org.eclipse.m2m.qvt.oml.util.Log;
 import org.eclipse.ocl.util.CollectionUtil;
 
 /**
@@ -51,29 +51,39 @@ public class CooperateLibrary {
         return result;
     }
     
-    @SuppressWarnings("unchecked")
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Adds the given element to multi-valued feature of the given context element.")
     public static void addToFeature(IContext executionContext, Object context, String featureName, Object element) {
-        Collection<Object> values = getFeatureCollection(context, featureName);
-        if (element instanceof Collection) {
-            values.addAll((Collection<Object>)element);
-        } else {
-            values.add(element);
-        }
+    	doAddToFeature(context, featureName, element, false, executionContext.getLog());
     }
     
-    @SuppressWarnings("unchecked")
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Replaces existing elements with the given element in a multi-valued feature of the given context element.")
     public static void setToFeature(IContext executionContext, Object context, String featureName, Object element) {
+    	doAddToFeature(context, featureName, element, true, executionContext.getLog());
+    }
+    
+    @SuppressWarnings("unchecked")
+	private static void doAddToFeature(Object context, String featureName, Object element, boolean clearBeforeAdding, Log log) {
         Collection<Object> values = getFeatureCollection(context, featureName);
-        values.clear();
-        if (element instanceof Collection) {
-            values.addAll((Collection<Object>)element);
-        } else {
-            values.add(element);
+        if (clearBeforeAdding) {
+        	values.clear();        	
         }
+        if (element instanceof Collection) {
+        	for (Object singleElement : (Collection<Object>)element) {
+        		doUniqueAddToCollection(values, singleElement, log);
+        	}
+        } else {
+        	doUniqueAddToCollection(values, element, log);
+        }
+    }
+    
+    private static void doUniqueAddToCollection(Collection<Object> collection, Object value, Log log) {
+    	if (!collection.contains(value)) {
+    		collection.add(value);
+    	} else {
+    		log.log(2, "The collection already contains the element to be added. Skipping addition of element.", value);
+    	}
     }
     
     private static Collection<Object> getFeatureCollection(Object context, String featureName) {
