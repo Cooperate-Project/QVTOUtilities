@@ -18,6 +18,7 @@
 	<modules>
 		<module>bundles</module>
 		<module>features</module>
+		<module>tests</module>
 		<module>releng</module>
 	</modules>
 
@@ -38,7 +39,7 @@
 		<repository>
 			<id>eclipse</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/neon</url>
+			<url>http://download.eclipse.org/releases/oxygen</url>
 		</repository>
 		<repository>
 			<id>cooperate-license</id>

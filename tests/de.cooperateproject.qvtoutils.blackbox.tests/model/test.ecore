@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="parentPackage" nsURI="http://www.cooperateproject.de/qvtoutils/blackbox/test"
+    nsPrefix="testmodel">
+  <eClassifiers xsi:type="ecore:EClass" name="ClassOnLevel1"/>
+  <eSubpackages name="subPackage1" nsURI="http://www.cooperateproject.de/qvtoutils/blackbox/test/subPackage1"
+      nsPrefix="subPackage1">
+    <eClassifiers xsi:type="ecore:EClass" name="ClassOnLevel2"/>
+    <eSubpackages name="subPackage1_1" nsURI="http://www.cooperateproject.de/qvtoutils/blackbox/test/subPackage1/subPackage1_1"
+        nsPrefix="subPackage1_1">
+      <eClassifiers xsi:type="ecore:EClass" name="ClassOnLevel3"/>
+      <eClassifiers xsi:type="ecore:EClass" name="SecondClassOnLevel3"/>
+      <eClassifiers xsi:type="ecore:EEnum" name="EnumOnLevel3"/>
+    </eSubpackages>
+  </eSubpackages>
+</ecore:EPackage>
