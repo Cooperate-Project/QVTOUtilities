@@ -1,7 +1,10 @@
 package de.cooperateproject.qvtoutils.blackbox.tests;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -9,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
@@ -86,7 +90,8 @@ public class CooperateLibraryTest {
 
     	CooperateLibrary.addToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), newClassifier);
     	
-    	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());    	
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), contains(newClassifier)));
     }
     
     @Test
@@ -99,22 +104,24 @@ public class CooperateLibraryTest {
     	CooperateLibrary.addToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), existingClassifier);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), contains(existingClassifier)));
     }
-    
+  
     @Test
     public void testAddToFeatureCollectionOfElements() {
     	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
     	
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	EClass newClassifier2 = EcoreFactory.eINSTANCE.createEClass();
-    	Collection<EClass> classifiersToAdd = Arrays.asList(newClassifier, newClassifier2);
+    	List<EClass> classifiersToAdd = Arrays.asList(newClassifier, newClassifier2);
     	
     	Collection<EClassifier> expectedClassifiers = new ArrayList<>(rootPackage.getEClassifiers());
     	expectedClassifiers.addAll(classifiersToAdd);
 
-    	CooperateLibrary.addToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), expectedClassifiers);
+    	CooperateLibrary.addToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), classifiersToAdd);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), equalTo(classifiersToAdd)));
     }
     
     @Test
@@ -131,6 +138,7 @@ public class CooperateLibraryTest {
     	CooperateLibrary.addToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), classifiersToAdd);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), equalTo(classifiersToAdd)));
     }
     
     @Test
@@ -143,6 +151,7 @@ public class CooperateLibraryTest {
     	CooperateLibrary.setToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), newClassifier);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), contains(newClassifier)));
     }
     
     @Test
@@ -157,6 +166,7 @@ public class CooperateLibraryTest {
     	CooperateLibrary.setToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), newClassifier2);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), contains(newClassifier2)));
     }
     
     @Test
@@ -170,5 +180,10 @@ public class CooperateLibraryTest {
     	CooperateLibrary.setToFeature(context, rootPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName(), expectedClassifiers);
     	
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
+    	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), equalTo(expectedClassifiers)));
     }
+    
+	private static Map<Collection<Object>, List<Object>> getAddFeatureRequests(IContext context) {
+		return context.getSessionData().getValue(CooperateLibrary.ADD_FEATURE_REQUESTS);
+	}
 }

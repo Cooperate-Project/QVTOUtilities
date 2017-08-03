@@ -1,7 +1,12 @@
 package de.cooperateproject.qvtoutils.blackbox;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collector;
@@ -14,7 +19,8 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.m2m.qvt.oml.blackbox.java.Operation;
 import org.eclipse.m2m.qvt.oml.blackbox.java.Operation.Kind;
 import org.eclipse.m2m.qvt.oml.util.IContext;
-import org.eclipse.m2m.qvt.oml.util.Log;
+import org.eclipse.m2m.qvt.oml.util.ISessionData;
+import org.eclipse.m2m.qvt.oml.util.ISessionData.Entry;
 import org.eclipse.ocl.util.CollectionUtil;
 
 import com.google.common.collect.Streams;
@@ -23,7 +29,14 @@ import com.google.common.collect.Streams;
  * Library for several utility operations related to the Cooperate project.
  */
 public class CooperateLibrary {
-
+	
+	public static final Entry<Map<Collection<Object>, List<Object>>> ADD_FEATURE_REQUESTS = new Entry<Map<Collection<Object>, List<Object>>>() {
+		@Override
+		public Map<Collection<Object>, List<Object>> defaultValue() {
+			return null;
+		}
+	};
+	
     /**
      * Instantiates the library.
      */
@@ -76,35 +89,37 @@ public class CooperateLibrary {
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Adds the given element to multi-valued feature of the given context element.")
     public static void addToFeature(IContext executionContext, Object context, String featureName, Object element) {
-    	doAddToFeature(context, featureName, element, false, executionContext.getLog());
+    	doAddToFeature(executionContext, context, featureName, element, false);
     }
     
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
             description = "Replaces existing elements with the given element in a multi-valued feature of the given context element.")
     public static void setToFeature(IContext executionContext, Object context, String featureName, Object element) {
-    	doAddToFeature(context, featureName, element, true, executionContext.getLog());
+    	doAddToFeature(executionContext, context, featureName, element, true);
     }
     
     @SuppressWarnings("unchecked")
-	private static void doAddToFeature(Object context, String featureName, Object element, boolean clearBeforeAdding, Log log) {
+	private static void doAddToFeature(IContext executionContext, Object context, String featureName, Object element, boolean clearBeforeAdding) {
         Collection<Object> values = getFeatureCollection(context, featureName);
         if (clearBeforeAdding) {
-        	values.clear();        	
+        	values.clear();
+        	clearAddFeatureRequests(executionContext, values);
         }
         if (element instanceof Collection) {
         	for (Object singleElement : (Collection<Object>)element) {
-        		doUniqueAddToCollection(values, singleElement, log);
+        		doUniqueAddToCollection(executionContext, values, singleElement);
         	}
         } else {
-        	doUniqueAddToCollection(values, element, log);
+        	doUniqueAddToCollection(executionContext, values, element);
         }
     }
     
-    private static void doUniqueAddToCollection(Collection<Object> collection, Object value, Log log) {
+    private static void doUniqueAddToCollection(IContext executionContext, Collection<Object> collection, Object value) {
+    	recordAddFeatureRequests(executionContext, collection, value);
     	if (!collection.contains(value)) {
     		collection.add(value);
     	} else {
-    		log.log(2, "The collection already contains the element to be added. Skipping addition of element.", value);
+    		executionContext.getLog().log(2, "The collection already contains the element to be added. Skipping addition of element.", value);
     	}
     }
     
@@ -125,5 +140,24 @@ public class CooperateLibrary {
         }
         return values.get();
     }
+    
+    private static void recordAddFeatureRequests(IContext executionContext, Collection<Object> collection, Object value) {
+    	Map<Collection<Object>, List<Object>> records = getAddFeatureRequests(executionContext.getSessionData());
+    	if (!records.containsKey(collection)) {
+    		records.put(collection, new ArrayList<>());
+    	}
+    	records.get(collection).add(value);
+    }
+    
+    private static void clearAddFeatureRequests(IContext executionContext, Collection<Object> collection) {
+		getAddFeatureRequests(executionContext.getSessionData()).getOrDefault(collection, Collections.emptyList()).clear();
+    }
+    
+	private static Map<Collection<Object>, List<Object>> getAddFeatureRequests(ISessionData sessionData) {
+		if (sessionData.getValue(ADD_FEATURE_REQUESTS) == null) {
+			sessionData.setValue(ADD_FEATURE_REQUESTS, new IdentityHashMap<>());
+		}
+		return sessionData.getValue(ADD_FEATURE_REQUESTS);
+	}
 
 }
