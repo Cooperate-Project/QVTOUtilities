@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -11,6 +12,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +38,13 @@ import org.junit.Test;
 import com.google.common.collect.Iterators;
 
 import de.cooperateproject.qvtoutils.blackbox.CooperateLibrary;
+import de.cooperateproject.qvtoutils.blackbox.internal.UnmodifiableLinkedHashSet;
 
 public class CooperateLibraryTest {
 	
     protected ResourceSet resourceSet;
-    protected Resource modelResource;
 	protected IContext context;
+	protected EPackage rootPackage;
     
     @BeforeClass
     public static void init() throws Exception {
@@ -55,26 +58,36 @@ public class CooperateLibraryTest {
 	@Before
     public void setup() {
         resourceSet = new ResourceSetImpl();
-        modelResource = resourceSet.getResource(URI.createURI("model/test.ecore"), true);
+        Resource modelResource = resourceSet.getResource(URI.createURI("model/test.ecore"), true);
+        rootPackage = (EPackage)modelResource.getContents().get(0);
         context = TestUtils.createLoggingContext();
     }
-    
+	
+   
     @Test
     public void testGetAllContents() {
-        EObject e = modelResource.getContents().get(0);
-        assertThat(CooperateLibrary.getAllContents(context, e), contains(Iterators.toArray(e.eAllContents(), EObject.class)));
+        assertThat(CooperateLibrary.getAllContents(context, rootPackage), contains(Iterators.toArray(rootPackage.eAllContents(), EObject.class)));
     }
     
     @Test
     public void testGetAllContentsFromRoot() {
-        EPackage p = (EPackage) modelResource.getContents().get(0).eContents().stream().filter(EcorePackage.eINSTANCE.getEPackage()::isInstance).findFirst().get();
+        EPackage p = rootPackage.getESubpackages().get(0);
         assertThat(CooperateLibrary.getAllContents(context, p), 
-                contains(Iterators.toArray(modelResource.getContents().get(0).eAllContents(), EObject.class)));
+                contains(Iterators.toArray(rootPackage.eAllContents(), EObject.class)));
     }
+    
+	@Test
+	public void testGetFeature() {
+		EPackage p = rootPackage.getESubpackages().get(0).getESubpackages().get(0);
+		LinkedHashSet<EObject> queryResult = CooperateLibrary.getFeature(context, p,
+				EcorePackage.Literals.EPACKAGE__ECLASSIFIERS.getName());
+		assertThat(queryResult, contains(p.getEClassifiers().toArray()));
+		assertThat(queryResult, is(instanceOf(UnmodifiableLinkedHashSet.class)));
+	}
     
     @Test
     public void testTypedAllContentsFromRoot() {
-        EPackage p = (EPackage) modelResource.getContents().get(0).eContents().stream().filter(EcorePackage.eINSTANCE.getEPackage()::isInstance).findFirst().get();
+        EPackage p = rootPackage.getESubpackages().get(0);
         assertThat(CooperateLibrary.getAllContentsOfType(context, p, EcorePackage.eINSTANCE.getEEnum(), true), hasSize(1));
         assertThat(CooperateLibrary.getAllContentsOfType(context, p, EcorePackage.eINSTANCE.getEClass(), true), hasSize(4));
         assertThat(CooperateLibrary.getAllContentsOfType(context, p, EcorePackage.eINSTANCE.getEClassifier(), true), hasSize(5));
@@ -82,8 +95,6 @@ public class CooperateLibraryTest {
 
     @Test
     public void testAddToFeatureSingleElement() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	ArrayList<EClassifier> expectedClassifiers = new ArrayList<>(rootPackage.getEClassifiers());
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	expectedClassifiers.add(newClassifier);
@@ -96,8 +107,6 @@ public class CooperateLibraryTest {
     
     @Test
     public void testAddToFeatureDuplicates() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	ArrayList<EClassifier> expectedClassifiers = new ArrayList<>(rootPackage.getEClassifiers());
     	EClassifier existingClassifier = rootPackage.getEClassifiers().get(0);
 
@@ -109,8 +118,6 @@ public class CooperateLibraryTest {
   
     @Test
     public void testAddToFeatureCollectionOfElements() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	EClass newClassifier2 = EcoreFactory.eINSTANCE.createEClass();
     	List<EClass> classifiersToAdd = Arrays.asList(newClassifier, newClassifier2);
@@ -126,8 +133,6 @@ public class CooperateLibraryTest {
     
     @Test
     public void testAddToFeatureCollectionOfElementsContainingDuplicates() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	EClassifier oldClassifier = rootPackage.getEClassifiers().get(0);
     	EClass newClassifier2 = EcoreFactory.eINSTANCE.createEClass();
     	Collection<EClassifier> classifiersToAdd = Arrays.asList(oldClassifier, newClassifier2);
@@ -143,8 +148,6 @@ public class CooperateLibraryTest {
     
     @Test
     public void testSetToFeatureSingleElement() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	List<EClass> expectedClassifiers = Arrays.asList(newClassifier);
 
@@ -156,8 +159,6 @@ public class CooperateLibraryTest {
     
     @Test
     public void testSetToFeatureSingleElementMultipleTimes() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	EClass newClassifier2 = EcoreFactory.eINSTANCE.createEClass();
     	List<EClass> expectedClassifiers = Arrays.asList(newClassifier2);
@@ -171,8 +172,6 @@ public class CooperateLibraryTest {
     
     @Test
     public void testSetToFeatureCollectionOfElements() {
-    	EPackage rootPackage = (EPackage) modelResource.getContents().get(0);
-    	
     	EClass newClassifier = EcoreFactory.eINSTANCE.createEClass();
     	EClass newClassifier2 = EcoreFactory.eINSTANCE.createEClass();
     	List<EClass> expectedClassifiers = Arrays.asList(newClassifier, newClassifier2);
@@ -182,7 +181,7 @@ public class CooperateLibraryTest {
     	assertEquals(expectedClassifiers, rootPackage.getEClassifiers());
     	assertThat(getAddFeatureRequests(context), hasEntry(is(rootPackage.getEClassifiers()), equalTo(expectedClassifiers)));
     }
-    
+	
 	private static Map<Collection<Object>, List<Object>> getAddFeatureRequests(IContext context) {
 		return context.getSessionData().getValue(CooperateLibrary.ADD_FEATURE_REQUESTS);
 	}

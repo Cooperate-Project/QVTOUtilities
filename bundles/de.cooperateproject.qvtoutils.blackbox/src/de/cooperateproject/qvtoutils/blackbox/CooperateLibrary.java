@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -24,6 +25,8 @@ import org.eclipse.m2m.qvt.oml.util.ISessionData.Entry;
 import org.eclipse.ocl.util.CollectionUtil;
 
 import com.google.common.collect.Streams;
+
+import de.cooperateproject.qvtoutils.blackbox.internal.UnmodifiableLinkedHashSet;
 
 /**
  * Library for several utility operations related to the Cooperate project.
@@ -84,6 +87,17 @@ public class CooperateLibrary {
     public static String generateUUID() {
         UUID uuid = UUID.randomUUID();
         return "{" + uuid.toString() + "}";
+    }
+    
+    @SuppressWarnings("squid:S1319")
+    @Operation(contextual = true, withExecutionContext=true, kind = Kind.QUERY)
+    public static LinkedHashSet<EObject> getFeature(IContext executionContext, Object context, String featureName) {
+    	Collection<Object> foundCollection = getFeatureCollection(context, featureName);
+    	if (!foundCollection.stream().allMatch(EObject.class::isInstance)) {
+    		throw new IllegalStateException("Not all elements contained in the feature are instances of EObject");
+    	}
+    	List<EObject> typedCollection = foundCollection.stream().map(EObject.class::cast).collect(Collectors.toList());
+    	return UnmodifiableLinkedHashSet.create(new LinkedHashSet<EObject>(typedCollection));
     }
     
     @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
