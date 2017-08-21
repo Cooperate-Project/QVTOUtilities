@@ -16,6 +16,7 @@
 	<name>Cooperate QVTO Utils</name>
 
 	<modules>
+		<module>releng/de.cooperateproject.qvtoutils.dummy</module>
 		<module>bundles</module>
 		<module>features</module>
 		<module>tests</module>
@@ -32,6 +33,9 @@
 		<maven.deploy-plugin.version>2.8.2</maven.deploy-plugin.version>
 		<bintray.deploy.plugin.version>0.1.1</bintray.deploy.plugin.version>
 		<bintray.deploy.repository>QVTOUtils</bintray.deploy.repository>
+		<jacoco.version>0.7.7.201606060606</jacoco.version>
+		<jacoco.reportPath>../../releng/de.cooperateproject.qvtoutils.dummy/target/jacoco.exec</jacoco.reportPath>
+		<sonar.jacoco.reportPaths>${jacoco.reportPath}</sonar.jacoco.reportPaths>
 	</properties>
 
 	<repositories>
@@ -120,6 +124,29 @@
 					<deployAtEnd>true</deployAtEnd>
 					<skip>true</skip>
 				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<configuration>
+					<append>true</append>
+					<excludes>
+						<exclude>**org.eclipse*</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<destFile>${jacoco.reportPath}</destFile>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 		</plugins>

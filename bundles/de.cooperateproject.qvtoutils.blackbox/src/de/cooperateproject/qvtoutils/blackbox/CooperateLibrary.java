@@ -32,9 +32,9 @@ import de.cooperateproject.qvtoutils.blackbox.internal.UnmodifiableLinkedHashSet
  * Library for several utility operations related to the Cooperate project.
  */
 public class CooperateLibrary {
-	
-	public static final Entry<Map<Collection<Object>, List<Object>>> ADD_FEATURE_REQUESTS = () -> null;
-	
+
+    public static final Entry<Map<Collection<Object>, List<Object>>> ADD_FEATURE_REQUESTS = () -> null;
+
     /**
      * Instantiates the library.
      */
@@ -44,129 +44,135 @@ public class CooperateLibrary {
     }
 
     @SuppressWarnings("squid:S1319")
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY,
-        description = "Determines all contained elements of the given object.")
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY, description = "Determines all contained elements of the given object.")
     public static LinkedHashSet<EObject> getAllContents(IContext executionContext, Object rootObject) {
         return getAllContents(executionContext, rootObject, true);
     }
 
     @SuppressWarnings("squid:S1319")
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY,
-        description = "Determines all elements of the containment tree, to which the given object belongs to.")
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY, description = "Determines all elements of the containment tree, to which the given object belongs to.")
     public static LinkedHashSet<EObject> getAllContents(IContext executionContext, Object rootObject, boolean forRoot) {
         return getAllContentsOfType(executionContext, rootObject, EcorePackage.eINSTANCE.getEObject(), forRoot);
     }
-    
+
     @SuppressWarnings("squid:S1319")
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY,
-        description = "Determines all elements of the containment tree, to which the given object belongs to.")
-    public static LinkedHashSet<EObject> getAllContentsOfType(IContext executionContext, Object rootObject, EClass type, boolean forRoot) {
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY, description = "Determines all elements of the containment tree, to which the given object belongs to.")
+    public static LinkedHashSet<EObject> getAllContentsOfType(IContext executionContext, Object rootObject, EClass type,
+            boolean forRoot) {
         LinkedHashSet<EObject> result = null;
         if (rootObject instanceof EObject) {
             EObject typedRootObject = (EObject) rootObject;
             if (forRoot) {
                 typedRootObject = EcoreUtil.getRootContainer(typedRootObject);
             }
-            result = Streams.stream(typedRootObject.eAllContents()).filter(type::isInstance).collect(
-                    Collector.of(CollectionUtil::<EObject>createNewOrderedSet, Collection::add, 
-                            (c1, c2) -> {c1.addAll(c2); return c1;}));
+            result = Streams.stream(typedRootObject.eAllContents()).filter(type::isInstance)
+                    .collect(Collector.of(CollectionUtil::<EObject> createNewOrderedSet, Collection::add, (c1, c2) -> {
+                        c1.addAll(c2);
+                        return c1;
+                    }));
         } else {
             executionContext.getLog().log("Unsupported type for call to getAllContents()",
                     Optional.ofNullable(rootObject).map(Object::getClass).orElseGet(null));
         }
         return result != null ? result : CollectionUtil.createNewOrderedSet();
     }
-    
+
     @SuppressWarnings("squid:S1319")
     @Operation(contextual = false, withExecutionContext = false, kind = Kind.QUERY, description = "Generates a UUID.")
     public static String generateUUID() {
         UUID uuid = UUID.randomUUID();
         return "{" + uuid.toString() + "}";
     }
-    
+
     @SuppressWarnings("squid:S1319")
-    @Operation(contextual = true, withExecutionContext=true, kind = Kind.QUERY)
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.QUERY)
     public static LinkedHashSet<EObject> getFeature(IContext executionContext, Object context, String featureName) {
-    	Collection<Object> foundCollection = getFeatureCollection(context, featureName);
-    	if (!foundCollection.stream().allMatch(EObject.class::isInstance)) {
-    		throw new IllegalStateException("Not all elements contained in the feature are instances of EObject");
-    	}
-    	List<EObject> typedCollection = foundCollection.stream().map(EObject.class::cast).collect(Collectors.toList());
-    	return UnmodifiableLinkedHashSet.create(new LinkedHashSet<EObject>(typedCollection));
+        Collection<Object> foundCollection = getFeatureCollection(context, featureName);
+        if (!foundCollection.stream().allMatch(EObject.class::isInstance)) {
+            throw new IllegalStateException("Not all elements contained in the feature are instances of EObject");
+        }
+        List<EObject> typedCollection = foundCollection.stream().map(EObject.class::cast).collect(Collectors.toList());
+        return UnmodifiableLinkedHashSet.create(new LinkedHashSet<EObject>(typedCollection));
     }
-    
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
-            description = "Adds the given element to multi-valued feature of the given context element.")
+
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER, description = "Adds the given element to multi-valued feature of the given context element.")
     public static void addToFeature(IContext executionContext, Object context, String featureName, Object element) {
-    	doAddToFeature(executionContext, context, featureName, element, false);
+        doAddToFeature(executionContext, context, featureName, element, false);
     }
-    
-    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER,
-            description = "Replaces existing elements with the given element in a multi-valued feature of the given context element.")
+
+    @Operation(contextual = true, withExecutionContext = true, kind = Kind.HELPER, description = "Replaces existing elements with the given element in a multi-valued feature of the given context element.")
     public static void setToFeature(IContext executionContext, Object context, String featureName, Object element) {
-    	doAddToFeature(executionContext, context, featureName, element, true);
+        doAddToFeature(executionContext, context, featureName, element, true);
     }
-    
+
     @SuppressWarnings("unchecked")
-	private static void doAddToFeature(IContext executionContext, Object context, String featureName, Object element, boolean clearBeforeAdding) {
+    private static void doAddToFeature(IContext executionContext, Object context, String featureName, Object element,
+            boolean clearBeforeAdding) {
         Collection<Object> values = getFeatureCollection(context, featureName);
         if (clearBeforeAdding) {
-        	values.clear();
-        	clearAddFeatureRequests(executionContext, values);
+            values.clear();
+            clearAddFeatureRequests(executionContext, values);
         }
         if (element instanceof Collection) {
-        	for (Object singleElement : (Collection<Object>)element) {
-        		doUniqueAddToCollection(executionContext, values, singleElement);
-        	}
+            for (Object singleElement : (Collection<Object>) element) {
+                doUniqueAddToCollection(executionContext, values, singleElement);
+            }
         } else {
-        	doUniqueAddToCollection(executionContext, values, element);
+            doUniqueAddToCollection(executionContext, values, element);
         }
     }
-    
-    private static void doUniqueAddToCollection(IContext executionContext, Collection<Object> collection, Object value) {
-    	recordAddFeatureRequests(executionContext, collection, value);
-    	if (!collection.contains(value)) {
-    		collection.add(value);
-    	} else {
-    		executionContext.getLog().log(2, "The collection already contains the element to be added. Skipping addition of element.", value);
-    	}
+
+    private static void doUniqueAddToCollection(IContext executionContext, Collection<Object> collection,
+            Object value) {
+        recordAddFeatureRequests(executionContext, collection, value);
+        if (!collection.contains(value)) {
+            collection.add(value);
+        } else {
+            executionContext.getLog().log(2,
+                    "The collection already contains the element to be added. Skipping addition of element.", value);
+        }
     }
-    
+
     private static Collection<Object> getFeatureCollection(Object context, String featureName) {
         if (!(context instanceof EObject)) {
             throw new IllegalArgumentException(String.format("The given element %s is not an EObject.", context));
         }
-        
-        EObject typedContext = (EObject)context;
-        Optional<EReference> possibleFeature = typedContext.eClass().getEAllReferences().stream().filter(f -> f.getName().equals(featureName)).findFirst();
+
+        EObject typedContext = (EObject) context;
+        Optional<EReference> possibleFeature = typedContext.eClass().getEAllReferences().stream()
+                .filter(f -> f.getName().equals(featureName)).findFirst();
         if (!possibleFeature.map(EReference::isMany).orElse(false)) {
-            throw new IllegalArgumentException(String.format("The given feature %s is not a multi-valued reference.", featureName));
+            throw new IllegalArgumentException(
+                    String.format("The given feature %s is not a multi-valued reference.", featureName));
         }
-        
-        Optional<Collection<Object>> values = possibleFeature.map(typedContext::eGet).filter(Collection.class::isInstance).map(Collection.class::cast);
+
+        Optional<Collection<Object>> values = possibleFeature.map(typedContext::eGet)
+                .filter(Collection.class::isInstance).map(Collection.class::cast);
         if (!values.isPresent()) {
             throw new IllegalStateException("The feature does not contain a collection.");
         }
         return values.get();
     }
-    
-    private static void recordAddFeatureRequests(IContext executionContext, Collection<Object> collection, Object value) {
-    	Map<Collection<Object>, List<Object>> records = getAddFeatureRequests(executionContext.getSessionData());
-    	if (!records.containsKey(collection)) {
-    		records.put(collection, new ArrayList<>());
-    	}
-    	records.get(collection).add(value);
+
+    private static void recordAddFeatureRequests(IContext executionContext, Collection<Object> collection,
+            Object value) {
+        Map<Collection<Object>, List<Object>> records = getAddFeatureRequests(executionContext.getSessionData());
+        if (!records.containsKey(collection)) {
+            records.put(collection, new ArrayList<>());
+        }
+        records.get(collection).add(value);
     }
-    
+
     private static void clearAddFeatureRequests(IContext executionContext, Collection<Object> collection) {
-		getAddFeatureRequests(executionContext.getSessionData()).getOrDefault(collection, Collections.emptyList()).clear();
+        getAddFeatureRequests(executionContext.getSessionData()).getOrDefault(collection, Collections.emptyList())
+                .clear();
     }
-    
-	private static Map<Collection<Object>, List<Object>> getAddFeatureRequests(ISessionData sessionData) {
-		if (sessionData.getValue(ADD_FEATURE_REQUESTS) == null) {
-			sessionData.setValue(ADD_FEATURE_REQUESTS, new IdentityHashMap<>());
-		}
-		return sessionData.getValue(ADD_FEATURE_REQUESTS);
-	}
+
+    private static Map<Collection<Object>, List<Object>> getAddFeatureRequests(ISessionData sessionData) {
+        if (sessionData.getValue(ADD_FEATURE_REQUESTS) == null) {
+            sessionData.setValue(ADD_FEATURE_REQUESTS, new IdentityHashMap<>());
+        }
+        return sessionData.getValue(ADD_FEATURE_REQUESTS);
+    }
 
 }
