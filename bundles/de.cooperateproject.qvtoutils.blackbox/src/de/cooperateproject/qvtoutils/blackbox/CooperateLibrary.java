@@ -33,12 +33,7 @@ import de.cooperateproject.qvtoutils.blackbox.internal.UnmodifiableLinkedHashSet
  */
 public class CooperateLibrary {
 	
-	public static final Entry<Map<Collection<Object>, List<Object>>> ADD_FEATURE_REQUESTS = new Entry<Map<Collection<Object>, List<Object>>>() {
-		@Override
-		public Map<Collection<Object>, List<Object>> defaultValue() {
-			return null;
-		}
-	};
+	public static final Entry<Map<Collection<Object>, List<Object>>> ADD_FEATURE_REQUESTS = () -> null;
 	
     /**
      * Instantiates the library.
