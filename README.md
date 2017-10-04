@@ -12,5 +12,5 @@ In order to use these utils, install the features available from the update site
 
 Release Status | Update Site
 --- | ---
-Release | tbd |
+Release | https://dl.bintray.com/cooperate-project/QVTOUtils/updatesite/1.0.1/ |
 Snapshot | https://dl.bintray.com/cooperate-project/QVTOUtils/updatesite/latest/ 
